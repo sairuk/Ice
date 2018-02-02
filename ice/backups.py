@@ -41,6 +41,8 @@ def backup_directory(config):
   return backup_dir
 
 def create_backup_of_shortcuts(config, user, dry_run=False):
+
+
   def _create_directory_if_needed(directory):
     if os.path.exists(directory):
       return
@@ -64,4 +66,6 @@ def create_backup_of_shortcuts(config, user, dry_run=False):
   # Make sure the user-specific backups dir exists
   _create_directory_if_needed(os.path.dirname(backup_path))
 
-  shortcuts.write_shortcuts(backup_path, shortcuts.get_shortcuts(user))
+  # remove None type becuase pysteam cant handle it
+  shortcuts_user = [shortcut for shortcut in shortcuts.get_shortcuts(user) if shortcut is not None]   
+  shortcuts.write_shortcuts(backup_path, shortcuts_user)

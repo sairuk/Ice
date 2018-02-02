@@ -23,28 +23,31 @@ class SteamShortcutSynchronizer(object):
     return any(map(shortcut_is_managed_by_console, consoles))
 
   def shortcut_is_managed_by_ice(self, managed_ids, shortcut, consoles):
-    # LEGACY: At one point I added ICE_FLAG_TAG to every shortcut Ice made.
-    # That was a terrible idea, the managed_ids is a much better system. I
-    # keep this check around for legacy reasons though.
-    if roms.ICE_FLAG_TAG in shortcut.tags:
-      return True
-    # LEGACY: For most of Ice's life it guessed whether it managed a shortcut
-    # or not. This was REALLY bad, as it was very dependent on configuration
-    # and caused really strange bugs where moving directories would cause ROMs
-    # to get duplicated and all sorts of bad stuff.
-    #
-    # Luckily, we have a history now and don't have to deal with that crap.
-    # Yay! Except that this screws over anyone who used Ice //before// it had
-    # a history, as we have no record of what they added before. Shit.
-    #
-    # To fix this, we provide a migration path for these people. If we have NO
-    # history (not an empty history, NO history) then we fall back to our old
-    # way of checking whether we manage the shortcut. The next time Ice is run
-    # we will have a history to work with and can avoid using this hacky garbage.
-    if managed_ids is None:
-      return self._guess_whether_shortcut_is_managed_by_ice(shortcut, consoles)
-    # We only 'manage' it if we added the shortcut in the last run
-    return shortcuts.shortcut_app_id(shortcut) in managed_ids
+    if shortcut:
+        # LEGACY: At one point I added ICE_FLAG_TAG to every shortcut Ice made.
+        # That was a terrible idea, the managed_ids is a much better system. I
+        # keep this check around for legacy reasons though.
+        if roms.ICE_FLAG_TAG in shortcut.tags:
+          return True
+        # LEGACY: For most of Ice's life it guessed whether it managed a shortcut
+        # or not. This was REALLY bad, as it was very dependent on configuration
+        # and caused really strange bugs where moving directories would cause ROMs
+        # to get duplicated and all sorts of bad stuff.
+        #
+        # Luckily, we have a history now and don't have to deal with that crap.
+        # Yay! Except that this screws over anyone who used Ice //before// it had
+        # a history, as we have no record of what they added before. Shit.
+        #
+        # To fix this, we provide a migration path for these people. If we have NO
+        # history (not an empty history, NO history) then we fall back to our old
+        # way of checking whether we manage the shortcut. The next time Ice is run
+        # we will have a history to work with and can avoid using this hacky garbage.
+        if managed_ids is None:
+          return self._guess_whether_shortcut_is_managed_by_ice(shortcut, consoles)
+        # We only 'manage' it if we added the shortcut in the last run
+        return shortcuts.shortcut_app_id(shortcut) in managed_ids
+    else:
+        return None
 
   def unmanaged_shortcuts(self, managed_ids, shortcuts, consoles):
     return filter(
@@ -73,7 +76,7 @@ class SteamShortcutSynchronizer(object):
     # to Plex would be 'Unmanaged'
     previous_managed_ids = self.managed_rom_archive.previous_managed_ids(user)
     logger.debug("Previous managed ids: %s" % previous_managed_ids)
-    current_shortcuts = shortcuts.get_shortcuts(user)
+    current_shortcuts = [shortcut for shortcut in shortcuts.get_shortcuts(user) if shortcut is not None]   
     unmanaged_shortcuts = self.unmanaged_shortcuts(previous_managed_ids, current_shortcuts, consoles)
     logger.debug("Unmanaged shortcuts: %s" % unmanaged_shortcuts)
     current_ice_shortcuts = filter(lambda shortcut: shortcut not in unmanaged_shortcuts, current_shortcuts)

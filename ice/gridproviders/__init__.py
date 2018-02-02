@@ -7,6 +7,7 @@ Created by Scott on 2013-12-26.
 Copyright (c) 2013 Scott Rice. All rights reserved.
 """
 __all__ = [
+    "retrogamingcloud_provider",
     "consolegrid_provider",
     "grid_image_provider",
     "local_provider",
